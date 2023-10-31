@@ -95,15 +95,18 @@ tourSchema.pre(/^find/, function (next) {
   this.start = Date.now();
   next();
 });
-// tourSchema.pre('findOne',function(next){
-//   this.find({secretTour:{$ne:true}})
-//   next();
-// })
 
-tourSchema.post(/^find/,function(docs,next) {
+tourSchema.post(/^find/, function (docs, next) {
   console.log(`query took ${Date.now() - this.start} milliseconds`);
   next();
-})
+});
+
+// AGGREGATE MIDDLEWARE : RUNS AFTER OR AFTER AGGREGATE FUNCTION
+tourSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  // console.log(this._pipeline);
+  next();
+});
 
 const TourModel = mongoose.model('Tour', tourSchema);
 
