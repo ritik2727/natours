@@ -1,8 +1,9 @@
 const express = require('express');
 const morgan = require('morgan');
+const appError = require('./utils/appError')
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
-
+const globalErrorHandler = require('./controllers/errorController')
 const app = express();
 
 // 1 st middleware
@@ -26,5 +27,10 @@ app.use((res, req, next) => {
 // routes
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+app.all('*', (req, res, next) => {
+  next(new appError('cant find',404));
+});
+app.use(globalErrorHandler)
+
 
 module.exports = app;

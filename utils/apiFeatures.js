@@ -34,7 +34,7 @@ class APIFeatures {
     }
     limitFields() {
       if (this.queryString.fields) {
-        const fields = this.queryString.fields.split(',').join(' ');
+        const fields = this.queryString.fields.split(',').join('');
         this.query = this.query.select(fields);
         // sort('price ratingsAverge')
       } else {
