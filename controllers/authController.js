@@ -17,6 +17,7 @@ exports.signup = catchAsync(async (req, res) => {
     email,
     password,
     passwordConfirm,
+    role:!req.body.role ? 'user':'admin'
   });
   const token = signToken(newUser._id);
 
@@ -40,7 +41,7 @@ exports.login = catchAsync(async (req, res) => {
   // 2) check if user exits && password is correct
   const user = await userModel.findOne({ email }).select('+password');
 
-  if (!user || !(await userModel.correctPassword(password, user.password))) {
+  if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('Incorrect email or password', 401));
   }
 
@@ -79,15 +80,26 @@ exports.protect = catchAsync(async (req, res, next) => {
   // 3) check if user still exists
   const user = await userModel.findById(decoded.id);
   if (!user) {
-    return AppError('user belonging to this token does not exist',400)
+    return new AppError('user belonging to this token does not exist',400)
   }
 
   // 4) check if user changed pwd after the token was listed
   if(user.changePasswordAfter(decoded.iat)){
-    return next(AppError('user recently chnaged password ! please log in again',401))
+    return next(new AppError('user recently chnaged password ! please log in again',401))
   }
 
   // Grant access to protected routes
   req.user = user;
   next();
 });
+exports.restrictTo =(...roles)=>{
+
+  return (req,res,next)=>{
+    // roles is an array ['admin','lead-guide];
+    if(!roles.includes(req.user.role)){
+      return next(new AppError('You do  not have permission to perform this action',403))
+    }
+
+    next();
+  }
+}
