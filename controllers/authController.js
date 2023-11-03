@@ -1,8 +1,10 @@
+const crypto = require('crypto');
 const { promisify } = require('util');
 const userModel = require('../models/userModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const jwt = require('jsonwebtoken');
+const sendEmail = require('../utils/email');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
@@ -17,7 +19,7 @@ exports.signup = catchAsync(async (req, res) => {
     email,
     password,
     passwordConfirm,
-    role:!req.body.role ? 'user':'admin'
+    role: !req.body.role ? 'user' : 'admin',
   });
   const token = signToken(newUser._id);
 
@@ -80,26 +82,107 @@ exports.protect = catchAsync(async (req, res, next) => {
   // 3) check if user still exists
   const user = await userModel.findById(decoded.id);
   if (!user) {
-    return new AppError('user belonging to this token does not exist',400)
+    return new AppError('user belonging to this token does not exist', 400);
   }
 
   // 4) check if user changed pwd after the token was listed
-  if(user.changePasswordAfter(decoded.iat)){
-    return next(new AppError('user recently chnaged password ! please log in again',401))
+  if (user.changePasswordAfter(decoded.iat)) {
+    return next(
+      new AppError('user recently chnaged password ! please log in again', 401)
+    );
   }
 
   // Grant access to protected routes
   req.user = user;
   next();
 });
-exports.restrictTo =(...roles)=>{
-
-  return (req,res,next)=>{
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
     // roles is an array ['admin','lead-guide];
-    if(!roles.includes(req.user.role)){
-      return next(new AppError('You do  not have permission to perform this action',403))
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do  not have permission to perform this action', 403)
+      );
     }
 
     next();
+  };
+};
+
+exports.forgetPassword = catchAsync(async (req, res, next) => {
+  // get user based on posted email
+  const user = await userModel.findOne({ email: req.body.email });
+
+  if (!user) {
+    return next(new AppError('There is no user with email .', 400));
   }
-}
+
+  // generate email then random reset token
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
+  // send it to users email
+  const resetURL = `${req.protocol}://${req.get(
+    'host'
+  )}/api/v1/users/resetPassword/${resetToken}`;
+  const message = `Foregt your password ? sumbit a Patch request with your new password and passwordConfirm to :${resetURL}. \n if didnt forget pwd please ignore this`;
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: 'your password reset token (valid for 10min)',
+      message,
+    });
+    res.status(200).json({
+      status: 'success',
+      message: 'Token sent',
+    });
+  } catch (err) {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+
+    await user.save({ validateBeforeSave: false });
+
+    return next(new AppError('error in sending the email ! try later', 500));
+  }
+});
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  // get user based on the token
+  const hashToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
+
+  const user = await userModel.findOne({
+    passwordResetToken: hashToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+  
+  if (!user) {
+    return next(new AppError('Token is invalid or expire .', 400));
+  }
+
+  // if token has not expired and ther is user ,set the neew pwd"
+  user.password = req.body.password;
+  user.password = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+
+  await user.save();
+
+
+
+  // update the changepassword property for the user
+  
+
+  // log the user in ,send jwt
+  const token = signToken(user._id);
+
+  res.status(201).json({
+    status: 'success',
+    token,
+    data: {
+      user,
+    },
+  });
+});
