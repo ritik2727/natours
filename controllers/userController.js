@@ -2,10 +2,9 @@ const userModel = require('../models/userModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 
-
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
-  Object.keys(obj).forEach(el => {
+  Object.keys(obj).forEach((el) => {
     if (allowedFields.includes(el)) newObj[el] = obj[el];
   });
   return newObj;
@@ -34,19 +33,30 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 
   // 2) Upate user docment
   const filteredBody = filterObj(req.body, 'name', 'email');
-  const updatedUser = await userModel.findByIdAndUpdate(req.user.id, filteredBody, {
-    new: true,
-    runValidators: true,
-  });
+  const updatedUser = await userModel.findByIdAndUpdate(
+    req.user.id,
+    filteredBody,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 
   res.status(200).json({
     status: 'success',
-    data:{
-      user:updatedUser
-    }
+    data: {
+      user: updatedUser,
+    },
   });
 });
 
+exports.deleteMe = catchAsync(async (req, res, next) => {
+  await userModel.findByIdAndUpdate(req.user.id, { active: false });
+
+  res.status(204).json({
+    status: 'succcess',
+  });
+});
 exports.getUser = (req, res) => {
   res.status(500).json({
     status: 'failure',
