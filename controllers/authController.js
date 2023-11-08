@@ -43,7 +43,7 @@ exports.signup = catchAsync(async (req, res) => {
     email,
     password,
     passwordConfirm,
-    role: !req.body.role ? 'user' : 'admin',
+    role: !req.body.role ? 'user' : req.body.role,
   });
   createSendToken(newUser, 200, res);
 });
