@@ -1,6 +1,7 @@
 const userModel = require('../models/userModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
+const { DeleteOne } = require('./handlerFactory');
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -75,9 +76,4 @@ exports.updatedUser = (req, res) => {
     message: 'This route not define',
   });
 };
-exports.deleteUser = (req, res) => {
-  res.status(500).json({
-    status: 'failure',
-    message: 'This route not define',
-  });
-};
+exports.deleteUser = DeleteOne(userModel);
