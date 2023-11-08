@@ -7,7 +7,7 @@ const tourSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      require: [true, 'A tour must Have a name'],
+      required: [true, 'A tour must Have a name'],
       unique: true,
       trim: true,
       maxlength: [40, 'A tour must have less or equal then 40 characters'],
@@ -17,15 +17,15 @@ const tourSchema = new mongoose.Schema(
     slug: String,
     duration: {
       type: Number,
-      require: [true, 'A tour must have a duration'],
+      required: [true, 'A tour must have a duration'],
     },
     maxGroupSize: {
       type: Number,
-      require: [true, 'A tour must have a max group size'],
+      required: [true, 'A tour must have a max group size'],
     },
     difficulty: {
       type: String,
-      require: [true, 'A tour must have a difficulty'],
+      required: [true, 'A tour must have a difficulty'],
       enum: {
         values: ['easy', 'medium', 'difficult'],
         message: 'Difficulty either :easy,medium,difficult',
@@ -33,7 +33,7 @@ const tourSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
-      require: [true, 'A tour must have a price'],
+      required: [true, 'A tour must have a price'],
     },
     ratingsAverage: {
       type: Number,
@@ -58,7 +58,7 @@ const tourSchema = new mongoose.Schema(
     summary: {
       type: String,
       trim: true,
-      require: [true, 'A tour must have a summary'],
+      required: [true, 'A tour must have a summary'],
       // trim only work in string it remove white spaces
     },
     description: {
@@ -108,7 +108,7 @@ const tourSchema = new mongoose.Schema(
     guides: [
       {
         type: mongoose.Schema.ObjectId,
-        ref:'User'
+        ref: 'User',
       },
     ],
   },
@@ -144,6 +144,14 @@ tourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
 
   this.start = Date.now();
+  next();
+});
+tourSchema.pre(/^find/, function ( next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+    // Check for any additional options here
+  });
   next();
 });
 
