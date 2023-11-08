@@ -90,7 +90,9 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
 });
 
 exports.getTours = catchAsync(async (req, res, next) => {
-  const tour = await TourModel.findById(req.params.id)
+  const tour = await TourModel.findById(req.params.id).populate({
+    path:'reviews'
+  })
   // TourModel.findOne({_id:req.params.id})
   console.log(tour);
 
