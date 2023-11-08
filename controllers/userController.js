@@ -1,7 +1,7 @@
 const userModel = require('../models/userModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
-const { DeleteOne, getOne } = require('./handlerFactory');
+const { DeleteOne, getOne, getAll } = require('./handlerFactory');
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -11,15 +11,7 @@ const filterObj = (obj, ...allowedFields) => {
   return newObj;
 };
 
-exports.getAllUsers = catchAsync(async (req, res) => {
-  const users = await userModel.find();
-  res.status(200).json({
-    status: 'success',
-    users: {
-      data: users,
-    },
-  });
-});
+exports.getAllUsers = getAll(userModel);
 
 exports.updateMe = catchAsync(async (req, res, next) => {
   // 1) create error if user POSTs password data
