@@ -1,7 +1,7 @@
 const userModel = require('../models/userModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
-const { DeleteOne, getOne, getAll } = require('./handlerFactory');
+const { DeleteOne, getOne, getAll, updateOne } = require('./handlerFactory');
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -12,6 +12,11 @@ const filterObj = (obj, ...allowedFields) => {
 };
 
 exports.getAllUsers = getAll(userModel);
+
+exports.getMe = (req,res,next) =>{
+  req.params.id = req.user.id;
+  next()
+}
 
 exports.updateMe = catchAsync(async (req, res, next) => {
   // 1) create error if user POSTs password data
@@ -57,10 +62,7 @@ exports.createUser = (req, res) => {
     message: 'This route not defined',
   });
 };
-exports.updatedUser = (req, res) => {
-  res.status(500).json({
-    status: 'failure',
-    message: 'This route not define',
-  });
-};
+
+// Do not update password with this
+exports.updatedUser = updateOne(userModel)
 exports.deleteUser = DeleteOne(userModel);

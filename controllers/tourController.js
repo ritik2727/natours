@@ -2,7 +2,8 @@ const catchAsync = require('./../utils/catchAsync');
 const TourModel = require('./../models/tourModel');
 const APIFeatures = require('./../utils/apiFeatures');
 const AppError = require('../utils/appError');
-const { DeleteOne, getOne, getAll } = require('./handlerFactory');
+const { DeleteOne, getOne, getAll, createOne,updateOne } = require('./handlerFactory');
+
 
 // const tours = JSON.parse(
 //   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
@@ -27,36 +28,9 @@ exports.getAllTours = getAll(TourModel);
 
 exports.getTours = getOne(TourModel, { path: 'reviews' });
 
-exports.createTour = catchAsync(async (req, res, next) => {
-  // const newTour = new tourModel({})
-  // newTour.save()
-  const newTour = await TourModel.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: {
-      tour: newTour,
-    },
-  });
-});
+exports.createTour = createOne(TourModel)
 
-exports.updatedTour = catchAsync(async (req, res, next) => {
-  const tour = await TourModel.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!tour) {
-    return next(new AppError('No tour found with that ID', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
-});
-
+exports.updatedTour = updateOne(TourModel);
 exports.deleteTour = DeleteOne(TourModel);
 exports.getTourStats = catchAsync(async (req, res, next) => {
   const stats = await TourModel.aggregate([

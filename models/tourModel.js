@@ -122,6 +122,8 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
+
+
 // we can use this in query
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
