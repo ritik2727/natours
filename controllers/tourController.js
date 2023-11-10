@@ -2,8 +2,13 @@ const catchAsync = require('./../utils/catchAsync');
 const TourModel = require('./../models/tourModel');
 const APIFeatures = require('./../utils/apiFeatures');
 const AppError = require('../utils/appError');
-const { DeleteOne, getOne, getAll, createOne,updateOne } = require('./handlerFactory');
-
+const {
+  DeleteOne,
+  getOne,
+  getAll,
+  createOne,
+  updateOne,
+} = require('./handlerFactory');
 
 // const tours = JSON.parse(
 //   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
@@ -28,7 +33,7 @@ exports.getAllTours = getAll(TourModel);
 
 exports.getTours = getOne(TourModel, { path: 'reviews' });
 
-exports.createTour = createOne(TourModel)
+exports.createTour = createOne(TourModel);
 
 exports.updatedTour = updateOne(TourModel);
 exports.deleteTour = DeleteOne(TourModel);
@@ -112,6 +117,28 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: plan,
+  });
+});
+
+exports.getToursWithin = catchAsync(async (req, res, next) => {
+  const { distance, unit, latlng } = req.params;
+  const [lat, lng] = latlng.split(',');
+
+  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
+
+  if (!lat || !lng)
+    return next(new AppError('Please provide a lat and lng', 400));
+
+  const tours = await TourModel.find({
+    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    results: tours.length,
+    data: {
+      data: tours,
+    },
   });
 });
 

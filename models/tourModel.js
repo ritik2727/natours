@@ -40,8 +40,9 @@ const tourSchema = new mongoose.Schema(
       default: 4.5,
       min: [1, 'Rating must be above 1'],
       max: [5, 'Rating must be below 5'],
+      set:val=>Math.round(val * 10)/10
     },
-    ratingQuantity: {
+    ratingsQuantity: {
       type: Number,
       default: 0,
     },
@@ -80,7 +81,7 @@ const tourSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    startLocations: {
+    startLocation: {
       // GeoJSON
       // embedded object
       type: {
@@ -123,7 +124,9 @@ const tourSchema = new mongoose.Schema(
 );
 
 
-
+tourSchema.index({price:1,ratingsAverage:-1})
+tourSchema.index({slug:1})
+tourSchema.index({startLocation:'2dsphere'})
 // we can use this in query
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;

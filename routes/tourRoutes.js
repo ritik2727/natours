@@ -9,6 +9,7 @@ const {
   alisaTopTours,
   getTourStats,
   getMonthlyPlan,
+  getToursWithin,
 } = require('../controllers/tourController');
 const { protect, restrictTo } = require('../controllers/authController');
 const reviewRouter = require('../routes/reviewRoutes');
@@ -28,6 +29,9 @@ router.route('/tour-stats').get(getTourStats);
 router
   .route('/monthly-plan/:year')
   .get(protect, restrictTo('admin', 'lead-guide', 'guide'), getMonthlyPlan);
+
+router.route('/tours-within/:distance/center/:latlng/unit/:unit').get(getToursWithin)
+// tour-dsitance?diestacne=233,center=-40,45&unit=mi
 
 router
   .route('/')
