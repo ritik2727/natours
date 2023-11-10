@@ -173,11 +173,12 @@ tourSchema.post(/^find/, function (docs, next) {
 });
 
 // AGGREGATE MIDDLEWARE : RUNS AFTER OR AFTER AGGREGATE FUNCTION
-tourSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-  // console.log(this._pipeline);
-  next();
-});
+// tourSchema.pre('aggregate', function (next) {
+
+//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+//   // console.log(this._pipeline);
+//   next();
+// });
 
 const TourModel = mongoose.model('Tour', tourSchema);
 

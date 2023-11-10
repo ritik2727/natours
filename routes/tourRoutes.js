@@ -10,6 +10,7 @@ const {
   getTourStats,
   getMonthlyPlan,
   getToursWithin,
+  getDistance,
 } = require('../controllers/tourController');
 const { protect, restrictTo } = require('../controllers/authController');
 const reviewRouter = require('../routes/reviewRoutes');
@@ -30,9 +31,10 @@ router
   .route('/monthly-plan/:year')
   .get(protect, restrictTo('admin', 'lead-guide', 'guide'), getMonthlyPlan);
 
-router.route('/tours-within/:distance/center/:latlng/unit/:unit').get(getToursWithin)
+router.route('/tours-within/:distances/center/:latlng/unit/:unit').get(getToursWithin)
 // tour-dsitance?diestacne=233,center=-40,45&unit=mi
 
+router.route('/distances/:latlng/unit/:unit').get(getDistance)
 router
   .route('/')
   .get(getAllTours)

@@ -130,7 +130,7 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
     return next(new AppError('Please provide a lat and lng', 400));
 
   const tours = await TourModel.find({
-    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } },
+    startLocation  : { $geoWithin: { $centerSphere: [[lng, lat], radius] } },
   });
 
   res.status(200).json({
@@ -141,6 +141,41 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
     },
   });
 });
+exports.getDistance = catchAsync(async (req,res,next)=>{
+  const {  unit, latlng } = req.params;
+  const [lat, lng] = latlng.split(',');
+
+  const multiplier = unit === 'mi' ? 0.000621371 : 0.001
+
+  if (!lat || !lng)
+    return next(new AppError('Please provide a lat and lng', 400));
+
+  const distances = await TourModel.aggregate([
+    {
+      $geoNear:{
+        near:{
+          type:'Point',
+          coordinates:[lng*1,lat*1]
+        },
+        distanceField: 'distance',
+        distanceMultiplier:multiplier
+      }
+    },
+    {
+      $project:{
+        distance:1,
+        name:1
+      }
+    }
+  ])
+  res.status(200).json({
+    status: 'success',
+    data: {
+      data: distances,
+    },
+  });
+
+})
 
 // exports.getAllTours = catchAsync(async (req, res, next) => {
 // // 1A).
