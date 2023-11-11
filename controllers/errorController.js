@@ -24,29 +24,63 @@ const handleJsonWebTokenErrorDB = (err) =>
 const handleJWTExpiredToken = (err) =>
   new AppError('Your token as expired! please log in again', 401);
 
-const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
-    status: err.status,
-    error: err,
-    message: err.message,
-    stack: err.stack,
-  });
-};
-const sendErrorProd = (err, res) => {
-  // truested error:send message to client
-  if (err.isOperational) {
-    res.status(err.statusCode).json({
+const sendErrorDev = (err, req, res) => {
+  // if(req.originalUrl.startWith('/api')){
+  //   res.status(err.statusCode).json({
+  //     status: err.status,
+  //     error: err,
+  //     message: err.message,
+  //     stack: err.stack,
+  //   });
+  // }
+  // A) API
+  if (req.originalUrl.startsWith('/api')) {
+    return res.status(err.statusCode).json({
       status: err.status,
+      error: err,
       message: err.message,
+      stack: err.stack,
+    });
+  } else {
+    // rendered website
+    res.status(err.statusCode).render('error', {
+      title: 'Something went wrong',
+      msg: err.message,
     });
   }
-  //   Programming error : dont leak error details
-  else {
-    res.status(500).json({
-      status: 'error',
-      message: 'something went wrong',
-    });
+};
+const sendErrorProd = (err, req, res) => {
+  if (req.originalUrl.startsWith('/api')) {
+    if (err.isOperational) {
+      res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message,
+      });
+    }
+    //   Programming error : dont leak error details
+    else {
+      res.status(500).json({
+        status: 'error',
+        message: 'something went wrong',
+      });
+    }
+  } else {
+    // render website
+    if (err.isOperational) {
+      res.status(err.statusCode).render('error', {
+        title: 'Something went wrong',
+        msg: err.message,
+      });
+    }
+    //   Programming error : dont leak error details
+    else {
+      res.status(err.statusCode).render('error', {
+        title: 'Something went wrong',
+        msg: 'Please try again later',
+      });
+    }
   }
+  // truested error:send message to client
 };
 
 module.exports = (err, req, res, next) => {
@@ -54,9 +88,10 @@ module.exports = (err, req, res, next) => {
   err.status = err.status || 'error';
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(err, res);
+    sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === 'production') {
     let error = { ...err };
+    error.message = err.message
     if (err.name === 'CastError') {
       error = handleCastErrorDB(error);
     }
@@ -72,6 +107,6 @@ module.exports = (err, req, res, next) => {
     if (err.name === 'TokenExpiredError') {
       error = handleJWTExpiredToken(error);
     }
-    sendErrorProd(error, res);
+    sendErrorProd(error, req, res);
   }
 };

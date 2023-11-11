@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const cookieParser = require('cookie-parser')
 const appError = require('./utils/appError');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
@@ -24,7 +25,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 1 st middleware
 
 // security HTTTP headers middleware
-app.use(helmet());
+// app.use(helmet());
+// app.use( helmet() );
+app.use( helmet({ contentSecurityPolicy: false }) );
 
 // development logging middleware
 if (process.env.NODE_ENV !== 'production') {
@@ -41,6 +44,7 @@ app.use('/api', limiter);
 
 // body parser,reading data from body into req.body
 app.use(express.json({ limit: '10kb' }));
+app.use(cookieParser())
 
 // data sanititzation against Nosql query injection
 app.use(mongoSanitize());
