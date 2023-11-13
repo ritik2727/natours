@@ -1,6 +1,7 @@
 const catchAsync = require('./../utils/catchAsync');
 const TourModel = require('./../models/tourModel');
 const AppError = require('./../utils/appError');
+const userModel = require('../models/userModel');
 
 exports.getOverview = catchAsync(async (req, res, next) => {
   // 1) get all tour data from collection
@@ -20,8 +21,8 @@ exports.getTour = catchAsync(async (req, res, next) => {
     fields: 'review rating user',
   });
 
-  if(!tour){
-    return next(new AppError('No tour found',400))
+  if (!tour) {
+    return next(new AppError('No tour found', 400));
   }
   // 2) Build template
 
@@ -34,5 +35,29 @@ exports.getTour = catchAsync(async (req, res, next) => {
 exports.getLoginForm = catchAsync(async (req, res, next) => {
   res.status(200).render('login', {
     title: 'Log Into your account',
+  });
+});
+
+exports.getAccount = catchAsync(async (req, res, next) => {
+  res.status(200).render('account', {
+    title: 'Your account',
+  });
+});
+
+exports.updateUserData = catchAsync(async (req, res, next) => {
+  const updatedUser = await userModel.findByIdAndUpdate(
+    req.user.id,
+    {
+      name: req.body.name,
+      email: req.body.email,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+  res.status(200).render('account', {
+    title: 'Your account',
+    user:updatedUser
   });
 });
