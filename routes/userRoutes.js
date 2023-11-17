@@ -1,4 +1,5 @@
 const express = require('express');
+
 const {
   getAllUsers,
   createUser,
@@ -8,6 +9,8 @@ const {
   updateMe,
   deleteMe,
   getMe,
+  uploadUserPhoto,
+  resizeUserPhoto,
 } = require('../controllers/userController');
 const {
   signup,
@@ -20,6 +23,8 @@ const {
   logout,
 } = require('../controllers/authController');
 const { createReview } = require('../controllers/reviewController');
+
+
 
 const router = express.Router();
 
@@ -35,7 +40,7 @@ router.use(protect);
 router.patch('/updateMyPassword', updatePassword);
 router.get('/me', getMe, getUser);
 router.delete('/deleteMe', deleteMe);
-router.patch('/updateMe', updateMe);
+router.patch('/updateMe',uploadUserPhoto,resizeUserPhoto, updateMe);
 
 // only admin have access to this
 router.use(restrictTo('admin'));
