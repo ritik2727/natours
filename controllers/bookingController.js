@@ -4,6 +4,7 @@ const BookingModel = require('./../models/bookingModel');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const AppError = require('../utils/appError');
+const { createOne, getOne, getAll, updateOne, DeleteOne } = require('./handlerFactory');
 
 exports.getCheckoutSession = async (req, res, next) => {
   // 1) get the currently booked tour
@@ -56,3 +57,8 @@ exports.createBookingCheckout = async (req, res, next) => {
 
   next();
 };
+exports.createBooking = createOne(BookingModel);
+exports.getBooking = getOne(BookingModel);
+exports.getAllBookings = getAll(BookingModel);
+exports.updateBooking = updateOne(BookingModel);
+exports.deleteBooking = DeleteOne(BookingModel);
